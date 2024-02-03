@@ -993,7 +993,7 @@ class AWSGeneralAbstractor : public AWSEngine::VersionAbstractor {
   CephContext* const cct;
 
   virtual boost::optional<std::string>
-  get_v4_canonical_headers(const req_info& info,
+  get_v4_canonical_headers(const req_state* const s,
                            const std::string_view& signedheaders,
                            const bool using_qs) const;
 
@@ -1010,7 +1010,7 @@ public:
 
 class AWSGeneralBoto2Abstractor : public AWSGeneralAbstractor {
   boost::optional<std::string>
-  get_v4_canonical_headers(const req_info& info,
+  get_v4_canonical_headers(const req_state* const s,
                            const std::string_view& signedheaders,
                            const bool using_qs) const override;
 

@@ -5577,11 +5577,11 @@ AWSGeneralAbstractor::get_auth_data(const req_state* const s) const
 
 boost::optional<std::string>
 AWSGeneralAbstractor::get_v4_canonical_headers(
-  const req_info& info,
+  const req_state* const s,
   const std::string_view& signedheaders,
   const bool using_qs) const
 {
-  return rgw::auth::s3::get_v4_canonical_headers(info, signedheaders,
+  return rgw::auth::s3::get_v4_canonical_headers(s, signedheaders,
                                                  using_qs, false);
 }
 
@@ -5748,7 +5748,7 @@ AWSGeneralAbstractor::get_auth_data_v4(const req_state* const s,
 
   /* craft canonical headers */
   boost::optional<std::string> canonical_headers = \
-    get_v4_canonical_headers(s->info, signed_hdrs, using_qs);
+    get_v4_canonical_headers(s, signed_hdrs, using_qs);
   if (canonical_headers) {
     using sanitize = rgw::crypt_sanitize::log_content;
     ldpp_dout(s, 10) << "canonical headers format = "
@@ -5941,11 +5941,11 @@ AWSGeneralAbstractor::get_auth_data_v4(const req_state* const s,
 
 boost::optional<std::string>
 AWSGeneralBoto2Abstractor::get_v4_canonical_headers(
-  const req_info& info,
+  const req_state* const s,
   const std::string_view& signedheaders,
   const bool using_qs) const
 {
-  return rgw::auth::s3::get_v4_canonical_headers(info, signedheaders,
+  return rgw::auth::s3::get_v4_canonical_headers(s, signedheaders,
                                                  using_qs, true);
 }
 

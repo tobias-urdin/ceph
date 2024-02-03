@@ -606,7 +606,7 @@ std::string gen_v4_canonical_qs(const req_info& info, bool is_non_s3_op);
 std::string get_v4_canonical_method(const req_state* s);
 
 boost::optional<std::string>
-get_v4_canonical_headers(const req_info& info,
+get_v4_canonical_headers(const req_state* const s,
                          const std::string_view& signedheaders,
                          bool using_qs,
                          bool force_boto2_compat);

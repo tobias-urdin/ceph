@@ -690,7 +690,7 @@ std::string get_v4_canonical_method(const req_state* s)
 }
 
 boost::optional<std::string>
-get_v4_canonical_headers(const req_info& info,
+get_v4_canonical_headers(const req_state* const s,
                          const std::string_view& signedheaders,
                          const bool using_qs,
                          const bool force_boto2_compat)
@@ -712,10 +712,19 @@ get_v4_canonical_headers(const req_info& info,
     } else if (token_env == "HTTP_CONTENT_TYPE") {
       token_env = "CONTENT_TYPE";
     }
-    const char* const t = info.env->get(token_env.c_str());
-    if (!t) {
-      dout(10) << "warning env var not available " << token_env.c_str() << dendl;
-      continue;
+
+    const char* t = nullptr;
+
+    // The x-amz-acl header is not in env but we have it in state
+    if (token_env == "HTTP_X_AMZ_ACL" && !s->canned_acl.empty()) {
+      t = s->canned_acl.c_str();
+    } else {
+      t = s->info.env->get(token_env.c_str());
+
+      if (!t) {
+        dout(10) << "warning env var not available " << token_env.c_str() << dendl;
+        continue;
+      }
     }
 
     std::string token_value(t);
@@ -728,8 +737,8 @@ get_v4_canonical_headers(const req_info& info,
     }
 
     if (force_boto2_compat && using_qs && token == "host") {
-      std::string_view port = info.env->get("SERVER_PORT", "");
-      std::string_view secure_port = info.env->get("SERVER_PORT_SECURE", "");
+      std::string_view port = s->info.env->get("SERVER_PORT", "");
+      std::string_view secure_port = s->info.env->get("SERVER_PORT_SECURE", "");
 
       if (!secure_port.empty()) {
 	if (secure_port != "443")
