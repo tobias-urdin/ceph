@@ -1673,21 +1673,23 @@ static int list_owner_bucket_info(const DoutPrefixProvider* dpp,
                                   const rgw_owner& owner,
                                   const std::string& tenant,
                                   const std::string& marker,
+				  uint32_t max_entries,
                                   bool show_stats,
                                   RGWFormatterFlusher& flusher)
 {
   Formatter* formatter = flusher.get_formatter();
   formatter->open_array_section("buckets");
 
-  const std::string empty_end_marker;
-  const size_t max_entries = dpp->get_cct()->_conf->rgw_list_buckets_max_chunk;
+  uint32_t use_max_entries = max_entries;
+  if (!use_max_entries)
+    use_max_entries = dpp->get_cct()->_conf->rgw_list_buckets_max_chunk;
   constexpr bool no_need_stats = false; // set need_stats to false
 
   rgw::sal::BucketList listing;
   listing.next_marker = marker;
   do {
     int ret = driver->list_buckets(dpp, owner, tenant, listing.next_marker,
-                                   empty_end_marker, max_entries, no_need_stats,
+                                   marker, use_max_entries, no_need_stats,
                                    listing, y);
     if (ret < 0) {
       return ret;
@@ -1747,10 +1749,10 @@ int RGWBucketAdminOp::info(rgw::sal::Driver* driver,
       ldpp_dout(dpp, 1) << "Listing buckets in user account "
           << info.account_id << dendl;
       ret = list_owner_bucket_info(dpp, y, driver, info.account_id, uid.tenant,
-                                   op_state.marker, show_stats, flusher);
+                                   op_state.marker, op_state.max_entries, show_stats, flusher);
     } else {
       ret = list_owner_bucket_info(dpp, y, driver, uid, uid.tenant,
-                                   op_state.marker, show_stats, flusher);
+                                   op_state.marker, op_state.max_entries, show_stats, flusher);
     }
     if (ret < 0) {
       return ret;
@@ -1769,7 +1771,7 @@ int RGWBucketAdminOp::info(rgw::sal::Driver* driver,
     }
 
     ret = list_owner_bucket_info(dpp, y, driver, account_id, info.tenant,
-                                 op_state.marker, show_stats, flusher);
+                                 op_state.marker, op_state.max_entries, show_stats, flusher);
     if (ret < 0) {
       return ret;
     }
